@@ -19,6 +19,9 @@ const ChatRoom: FC<Props> = ({messages}) => {
     const sendMessageCallback = (data: RouterOutputs['msg']['add']) => {
         utils.msg.list.cancel();
         const prevMessages = utils.msg.list.getData();
+        /**
+         * Read https://stackoverflow.com/questions/74679725/trpc-throws-an-error-in-setdata-usecontext-wrapper-of-tanstack-query-after-i-u
+         */
         if (prevMessages) utils.msg.list.setData((() => {})(), [...prevMessages, data.message])
     }
 
