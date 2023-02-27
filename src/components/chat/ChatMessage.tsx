@@ -19,9 +19,9 @@ const ChatMessage: FC<Props> = ({ message }) => {
       /**
        * Read https://stackoverflow.com/questions/74679725/trpc-throws-an-error-in-setdata-usecontext-wrapper-of-tanstack-query-after-i-u
        */
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       if (prevMessages)
         utils.msg.list.setData(
+          // eslint-disable-next-line @typescript-eslint/no-empty-function
           (() => {})(),
           prevMessages.filter((message) => message.id !== input.id)
         )

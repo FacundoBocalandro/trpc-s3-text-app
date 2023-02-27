@@ -22,8 +22,8 @@ const ChatRoom: FC<Props> = ({ messages }) => {
     /**
      * Read https://stackoverflow.com/questions/74679725/trpc-throws-an-error-in-setdata-usecontext-wrapper-of-tanstack-query-after-i-u
      */
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
     if (prevMessages)
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
       utils.msg.list.setData((() => {})(), [...prevMessages, data.message])
   }
 
