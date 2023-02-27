@@ -16,11 +16,12 @@ export const msgRouter = createTRPCRouter({
           data: { text: input.text, imageKey: input.imageKey },
         })
         const uploadUrl = await ctx.s3Service.getUrlToUpload(input.imageKey)
+        const assetUrl = await ctx.s3Service.getSignedAssetUrl(input.imageKey)
         return {
           uploadUrl,
           message: {
             ...message,
-            imageUrl: ctx.s3Service.getAssetUrl(input.imageKey),
+            imageUrl: assetUrl
           },
         }
       }
@@ -42,11 +43,12 @@ export const msgRouter = createTRPCRouter({
     }),
   list: publicProcedure.query(async ({ ctx }) => {
     const messages = await ctx.prisma.message.findMany()
-    return messages.map((message) => ({
-      ...message,
-      imageUrl: message.imageKey
-        ? ctx.s3Service.getAssetUrl(message.imageKey)
-        : null,
+    return await Promise.all(messages.map(async (message) => {
+      const assetUrl = message.imageKey ? await ctx.s3Service.getSignedAssetUrl(message.imageKey) : null;
+      return {
+        ...message,
+        imageUrl: assetUrl,
+      }
     }))
   }),
 })
