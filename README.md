@@ -1,4 +1,4 @@
-# Code Challenge: TRPC+S3 Text App V1
+# TRPC+S3 Text App V1
 
 ## Description
 
