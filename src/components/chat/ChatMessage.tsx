@@ -1,30 +1,45 @@
 import { api, RouterOutputs } from '~/utils/api'
 import { FC } from 'react'
-import { Box, Text, Image, ActionIcon } from '@mantine/core'
+import { Box, Text, Image, ActionIcon, Loader } from '@mantine/core'
 import { useHover } from '@mantine/hooks'
 import { IconTrash } from '@tabler/icons-react'
 
 type Props = {
   message: RouterOutputs['msg']['list'][0]
+  imageLoading: boolean
 }
 
-const ChatMessage: FC<Props> = ({ message }) => {
+const ChatMessage: FC<Props> = ({ message, imageLoading }) => {
   const utils = api.useContext()
 
   const { hovered, ref } = useHover()
   const deleteMessageMutation = api.msg.delete.useMutation({
     onMutate: (input) => {
-      utils.msg.list.cancel()
-      const prevMessages = utils.msg.list.getData()
       /**
-       * Read https://stackoverflow.com/questions/74679725/trpc-throws-an-error-in-setdata-usecontext-wrapper-of-tanstack-query-after-i-u
+       * Optimistic updates: https://create.t3.gg/en/usage/trpc/#optimistic-updates
        */
-      if (prevMessages)
+      // Cancel outgoing fetches (so they don't overwrite our optimistic update)
+      utils.msg.list.cancel()
+
+      // Get the data from the queryCache
+      const prevData = utils.msg.list.getData()
+
+      // Optimistically update the data with message deleted
+      if (prevData) {
         utils.msg.list.setData(
-          // eslint-disable-next-line @typescript-eslint/no-empty-function
-          (() => {})(),
-          prevMessages.filter((message) => message.id !== input.id)
+          undefined,
+          prevData.filter((message) => message.id !== input.id)
         )
+      }
+
+      // Return the previous data so we can revert if something goes wrong
+      return { prevData }
+    },
+    onError: (_error, _variables, context) => {
+      // If the mutation fails, use the context-value from onMutate
+      if (context) {
+        utils.msg.list.setData(undefined, context.prevData)
+      }
     },
   })
 
@@ -61,14 +76,18 @@ const ChatMessage: FC<Props> = ({ message }) => {
         }}
       >
         <Text fz="md">{message.text}</Text>
-        {message.imageUrl && (
-          <Image
-            radius="md"
-            width={200}
-            height={200}
-            alt={message.text}
-            src={message.imageUrl}
-          />
+        {imageLoading ? (
+          <Loader />
+        ) : (
+          message.imageUrl && (
+            <Image
+              radius="md"
+              width={200}
+              height={200}
+              alt={message.text}
+              src={message.imageUrl}
+            />
+          )
         )}
       </Box>
       <Text fz="xs">{message.createdAt.toLocaleString()}</Text>

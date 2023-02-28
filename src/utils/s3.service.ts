@@ -1,6 +1,10 @@
 import { GetObjectCommand, PutObjectCommand, S3 } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
-import { AWS_S3_BUCKET, GET_ASSETS_EXPIRES_IN, PUT_ASSETS_EXPIRES_IN } from '~/constants/s3'
+import {
+  AWS_S3_BUCKET,
+  GET_ASSETS_EXPIRES_IN,
+  PUT_ASSETS_EXPIRES_IN,
+} from '~/constants/s3'
 
 export class S3Service {
   private readonly s3: S3
@@ -34,10 +38,10 @@ export class S3Service {
     const command = new GetObjectCommand({
       Bucket: AWS_S3_BUCKET,
       Key: key,
-    });
+    })
     return getSignedUrl(this.s3, command, {
       expiresIn: GET_ASSETS_EXPIRES_IN,
-    });
+    })
   }
 
   public deleteSignedFile(key: string) {
