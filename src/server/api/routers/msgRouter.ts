@@ -1,5 +1,6 @@
 import { createTRPCRouter, publicProcedure } from '../trpc'
 import { z } from 'zod'
+import * as crypto from 'crypto'
 
 export const msgRouter = createTRPCRouter({
   add: publicProcedure
@@ -7,16 +8,20 @@ export const msgRouter = createTRPCRouter({
       z.object({
         text: z.string(),
         hasImage: z.boolean(),
-        imageKey: z.string().optional(),
+        imageExtension: z.string().optional(),
       })
+        .refine(schema => schema.hasImage ? !!schema.imageExtension : true, {
+          message: 'Image extension is required if message has image'
+        })
     )
     .mutation(async ({ input, ctx }) => {
-      if (input.hasImage && input.imageKey) {
+      if (input.hasImage) {
+        const imageKey = `${crypto.randomBytes(32).toString('base64')}.${input.imageExtension}`;
         const message = await ctx.prisma.message.create({
-          data: { text: input.text, imageKey: input.imageKey },
+          data: { text: input.text, imageKey },
         })
-        const uploadUrl = await ctx.s3Service.getUrlToUpload(input.imageKey)
-        const assetUrl = await ctx.s3Service.getSignedAssetUrl(input.imageKey)
+        const uploadUrl = await ctx.s3Service.getUrlToUpload(imageKey)
+        const assetUrl = await ctx.s3Service.getSignedAssetUrl(imageKey)
         return {
           uploadUrl,
           message: {

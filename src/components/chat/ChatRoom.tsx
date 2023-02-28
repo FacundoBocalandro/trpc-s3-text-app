@@ -1,9 +1,10 @@
-import { ActionIcon, Box, Button, FileButton, TextInput } from '@mantine/core'
+import { ActionIcon, Box, Button, FileButton, TextInput, Text } from '@mantine/core'
 import { IconPaperclip } from '@tabler/icons-react'
 import { FC, useState } from 'react'
 import { api, RouterOutputs } from '~/utils/api'
 import ChatMessage from '~/components/chat/ChatMessage'
-import { uploadFile } from '~/utils/image'
+import { getFileExtension, uploadFile } from '~/utils/image'
+import { onInputEnter } from '~/utils/input'
 
 type Props = {
   messages: RouterOutputs['msg']['list']
@@ -11,12 +12,15 @@ type Props = {
 
 const ChatRoom: FC<Props> = ({ messages }) => {
   const [message, setMessage] = useState<string>('')
-  const [image, setImage] = useState<File | null>()
+  const [image, setImage] = useState<File | null>(null);
 
   const utils = api.useContext()
   const sendMessageMutation = api.msg.add.useMutation()
 
   const sendMessageCallback = (data: RouterOutputs['msg']['add']) => {
+    // reset image
+    setImage(null);
+
     utils.msg.list.cancel()
     const prevMessages = utils.msg.list.getData()
     /**
@@ -35,16 +39,19 @@ const ChatRoom: FC<Props> = ({ messages }) => {
 
   const _sendMessage = () => {
     if (!!message) {
+      // reset message
       setMessage('')
       sendMessageMutation
         .mutateAsync({
           text: message,
           hasImage: Boolean(image),
-          imageKey: image?.name,
+          imageExtension: getFileExtension(image),
         })
         .then(_saveImage)
     }
   }
+
+  const onEnter = onInputEnter(_sendMessage);
 
   return (
     <Box
@@ -90,6 +97,7 @@ const ChatRoom: FC<Props> = ({ messages }) => {
           sx={{
             flexGrow: 1,
           }}
+          onKeyPress={onEnter}
         />
         <FileButton onChange={setImage} accept="image/png,image/jpeg">
           {(props) => (
@@ -97,9 +105,16 @@ const ChatRoom: FC<Props> = ({ messages }) => {
               {...props}
               sx={{
                 margin: 20,
+                position: 'relative'
               }}
             >
-              <IconPaperclip size={30} />
+              {image && <Text sx={{
+                position: 'absolute',
+                top: -5,
+                right: -5,
+                zIndex: 10,
+              }}>1</Text>}
+              <IconPaperclip size={30}/>
             </ActionIcon>
           )}
         </FileButton>

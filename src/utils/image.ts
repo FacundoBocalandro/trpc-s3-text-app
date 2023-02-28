@@ -9,3 +9,8 @@ export const uploadFile = async (
     body: buffer,
   }).then(callback)
 }
+
+export const getFileExtension = (image: File | null) => {
+  if (!image) return undefined;
+  return image.name.split('.').at(-1)
+}
