@@ -61,9 +61,6 @@ const ChatRoom: FC<Props> = ({ messages }) => {
         utils.msg.list.setData(undefined, context.prevData)
       }
     },
-    // onSettled: (_data, _error, _variables, context) => {
-    //   if (context) setLoadingImages(loadingImages.filter(id => id !== context.tmpId));
-    // }
   })
 
   const sendMessageCallback = () => {
